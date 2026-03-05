@@ -1,3 +1,5 @@
+@file:Suppress("SpellCheckingInspection")
+
 package org.delcom.services
 
 import io.ktor.http.*
@@ -29,9 +31,20 @@ class TodoService(
     suspend fun getAll(call: ApplicationCall) {
         val user = ServiceHelper.getAuthUser(call, userRepo)
 
+        // Mengambil parameter query dari URL
         val search = call.request.queryParameters["search"] ?: ""
 
-        val todos = todoRepo.getAll(user.id, search)
+        // Cek parameter "is_done" dan konversi ke Boolean.
+        // Jika tidak ada parameter ini, nilainya null (berarti tampilkan semua).
+        val isDoneParam = call.request.queryParameters["is_done"]
+        val isDone = isDoneParam?.toBooleanStrictOrNull()
+
+        // Paginasi: Ambil page dan perPage. Jika kosong, default ke 1 dan 10.
+        val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
+        val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
+
+        // Panggil ke repository
+        val todos = todoRepo.getAll(user.id, search, isDone, page, perPage)
 
         val response = DataResponse(
             "success",

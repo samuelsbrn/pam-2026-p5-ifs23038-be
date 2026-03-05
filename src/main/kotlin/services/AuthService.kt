@@ -1,3 +1,5 @@
+@file:Suppress("SpellCheckingInspection")
+
 package org.delcom.services
 
 import com.auth0.jwt.JWT

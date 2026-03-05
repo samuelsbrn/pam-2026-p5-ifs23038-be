@@ -1,6 +1,7 @@
+@file:Suppress("SpellCheckingInspection")
+
 package org.delcom.services
 
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -9,6 +10,7 @@ import io.ktor.util.cio.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import org.delcom.data.AppException
 import org.delcom.data.AuthRequest
 import org.delcom.data.DataResponse
@@ -70,6 +72,9 @@ class UserService(
 
         user.username = request.username
         user.name = request.name
+        // UPDATE: Perbarui timestamp
+        user.updatedAt = Clock.System.now()
+
         val isUpdated = userRepo.update(
             user.id,
             user
@@ -131,6 +136,8 @@ class UserService(
 
         val oldPhoto = user.photo
         user.photo = newPhoto
+        // UPDATE: Perbarui timestamp agar Android meminta gambar baru, bukan cache lama
+        user.updatedAt = Clock.System.now()
 
         val isUpdated = userRepo.update(
             user.id,
@@ -176,6 +183,9 @@ class UserService(
 
         // buat password baru
         user.password = hashPassword(request.newPassword)
+        // UPDATE: Perbarui timestamp
+        user.updatedAt = Clock.System.now()
+
         val isUpdated = userRepo.update(
             user.id,
             user

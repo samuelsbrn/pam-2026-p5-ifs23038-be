@@ -5,6 +5,7 @@ import org.delcom.entities.Todo
 import org.delcom.helpers.suspendTransaction
 import org.delcom.helpers.todoDAOToModel
 import org.delcom.tables.TodoTable
+import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
@@ -13,24 +14,34 @@ import org.jetbrains.exposed.sql.lowerCase
 import java.util.*
 
 class TodoRepository : ITodoRepository {
-    override suspend fun getAll(userId: String, search: String): List<Todo> = suspendTransaction {
-        if (search.isBlank()) {
-            TodoDAO
-                .find {
-                    (TodoTable.userId eq UUID.fromString(userId))
-                }
-                .orderBy(TodoTable.createdAt to SortOrder.DESC)
-                .map(::todoDAOToModel)
-        } else {
-            val keyword = "%${search.lowercase()}%"
+    override suspend fun getAll(
+        userId: String,
+        search: String,
+        isDone: Boolean?,
+        page: Int,
+        perPage: Int
+    ): List<Todo> = suspendTransaction {
+        val limitCount = perPage
+        val offsetCount = ((page - 1) * perPage).toLong()
 
-            TodoDAO
-                .find {
-                    TodoTable.title.lowerCase() like keyword
-                }
-                .orderBy(TodoTable.title to SortOrder.ASC)
-                .map(::todoDAOToModel)
+        TodoDAO.find {
+            var condition: Op<Boolean> = (TodoTable.userId eq UUID.fromString(userId))
+
+            if (search.isNotBlank()) {
+                val keyword = "%${search.lowercase()}%"
+                condition = condition and (TodoTable.title.lowerCase() like keyword)
+            }
+
+            if (isDone != null) {
+                condition = condition and (TodoTable.isDone eq isDone)
+            }
+
+            condition
         }
+            .orderBy(if (search.isNotBlank()) TodoTable.title to SortOrder.ASC else TodoTable.createdAt to SortOrder.DESC)
+            .limit(limitCount)
+            .offset(offsetCount)
+            .map(::todoDAOToModel)
     }
 
     override suspend fun getById(todoId: String): Todo? = suspendTransaction {
@@ -49,7 +60,7 @@ class TodoRepository : ITodoRepository {
             title = todo.title
             description = todo.description
             cover = todo.cover
-            isDone = todo.isDone
+            this.isDone = todo.isDone
             createdAt = todo.createdAt
             updatedAt = todo.updatedAt
         }
@@ -85,5 +96,4 @@ class TodoRepository : ITodoRepository {
         }
         rowsDeleted >= 1
     }
-
 }
