@@ -49,6 +49,7 @@ class UserRepository : IUserRepository {
             userDAO.username = newUser.username
             userDAO.password = newUser.password
             userDAO.photo = newUser.photo
+            userDAO.about = newUser.about // <-- BARIS INI DITAMBAHKAN AGAR TERSIMPAN
             userDAO.updatedAt = newUser.updatedAt
             true
         } else {
