@@ -3,12 +3,15 @@ ktor:
     modules:
       - org.delcom.ApplicationKt.module
   deployment:
-    port: 8080
-  jwt:
-    secret: ${JWT_SECRET}
+    port: ${APP_PORT}
+    host: ${APP_HOST}
+
   database:
     host: ${DB_HOST}
     port: ${DB_PORT}
     name: ${DB_NAME}
     user: ${DB_USER}
     password: ${DB_PASSWORD}
+
+  jwt:
+    secret: "${JWT_SECRET}"
