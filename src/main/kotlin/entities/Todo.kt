@@ -14,6 +14,8 @@ data class Todo(
     var description: String,
     var isDone: Boolean = false,
     var cover: String?,
+    // Tambahkan urgency
+    var urgency: String = "Low",
 
     @Contextual
     val createdAt: Instant = Clock.System.now(),

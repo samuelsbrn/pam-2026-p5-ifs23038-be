@@ -15,4 +15,5 @@ class UserDAO(id: EntityID<UUID>) : Entity<UUID>(id) {
     var photo by UserTable.photo
     var createdAt by UserTable.createdAt
     var updatedAt by UserTable.updatedAt
+    var about by UserTable.about
 }

@@ -14,10 +14,12 @@ import org.jetbrains.exposed.sql.lowerCase
 import java.util.*
 
 class TodoRepository : ITodoRepository {
+    // Tambahkan parameter urgency pada fungsi getAll
     override suspend fun getAll(
         userId: String,
         search: String,
         isDone: Boolean?,
+        urgency: String?, // <-- Filter Urgency
         page: Int,
         perPage: Int
     ): List<Todo> = suspendTransaction {
@@ -36,9 +38,18 @@ class TodoRepository : ITodoRepository {
                 condition = condition and (TodoTable.isDone eq isDone)
             }
 
+            // Tambahkan kondisi filter urgency
+            if (urgency != null) {
+                condition = condition and (TodoTable.urgency eq urgency)
+            }
+
             condition
         }
-            .orderBy(if (search.isNotBlank()) TodoTable.title to SortOrder.ASC else TodoTable.createdAt to SortOrder.DESC)
+            // Mengurutkan berdasarkan urgency (Opsional: Jika Anda ingin Custom Sort bisa memanipulasi di sini, secara default SortOrder memproses alfabetikal H -> L -> M, Anda mungkin butuh case logic bila ingin urutan Low -> Med -> High)
+            .orderBy(
+                if (search.isNotBlank()) TodoTable.title to SortOrder.ASC
+                else TodoTable.createdAt to SortOrder.DESC
+            )
             .limit(limitCount)
             .offset(offsetCount)
             .map(::todoDAOToModel)
@@ -61,6 +72,7 @@ class TodoRepository : ITodoRepository {
             description = todo.description
             cover = todo.cover
             this.isDone = todo.isDone
+            this.urgency = todo.urgency // <-- Simpan urgency
             createdAt = todo.createdAt
             updatedAt = todo.updatedAt
         }
@@ -82,6 +94,7 @@ class TodoRepository : ITodoRepository {
             todoDAO.description = newTodo.description
             todoDAO.cover = newTodo.cover
             todoDAO.isDone = newTodo.isDone
+            todoDAO.urgency = newTodo.urgency // <-- Update urgency
             todoDAO.updatedAt = newTodo.updatedAt
             true
         } else {
